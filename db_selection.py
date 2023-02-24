@@ -74,3 +74,5 @@ def lock_db_tab(t1):
     for child in t1.winfo_children():
         child.configure(state='disable')
     t1.winfo_children()[-1].configure(state='normal')
+
+#
