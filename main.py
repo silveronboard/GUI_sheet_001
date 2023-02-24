@@ -1,15 +1,16 @@
 """
-This is a replica of well-known FIRM software with limited functionality:
+This is a replica of Company well-known FIRM software with simplified functionality:
 sequence data only, without any date-dependant datasets.
 Usage:
 python main.py
 """
 # python libraries
 import sqlite3
-from tkinter import ttk
+import tkinter.ttk as ttk
 import shutil
 
 # import from other py files
+import date_referenced
 import db_selection
 import base_directory
 import upload
@@ -19,8 +20,8 @@ import dataset_definitions
 # identify active database name
 selected_db = read_last_opened_db()
 
-# software version
-version = "0.2"
+# software version settings
+version = "0.4"
 
 
 # create database (copy empty db structure from MASTER_db.master)
@@ -53,6 +54,7 @@ def select_db_and_lock():
     alias_records = aliases.read_alias(selected_db)
     aliases.aliases_treeview(tab2, alias_records)
     base_directory.folders_treeview(tab3, base_directory.read_directories(selected_db))
+
     dataset_definitions.datasets_treeview(tab4, base_directory.read_directories(selected_db))
     Tk.update(root)
 
@@ -75,6 +77,7 @@ def window(root, title, geometry):
     global button_create
     global button_unlock
     global listbox1
+    # darkstyle(root)
     root.title(title)  # Window title
     root.geometry(geometry)  # Window geometry
     Label(root, text="Database selection")
@@ -90,7 +93,10 @@ def window(root, title, geometry):
     tabControl.add(tab4, text="Dataset Definitions")
     tab5 = ttk.Frame(tabControl)
     tabControl.add(tab5, text="Upload")
+    tab6 = ttk.Frame(tabControl)
+    tabControl.add(tab6, text="Date referenced")
     tabControl.pack(expand=1, fill='both', side="left")
+
     # Project DB tab:
     listbox1 = listbox_db(tab1)
     db_entry = Entry(master=tab1)
@@ -122,11 +128,14 @@ def window(root, title, geometry):
     dataset_definitions.datasets_treeview(tab4, dataset_records)
     dataset_definitions.datasets_edit(tab4)
     upload.sequence_treeview(tab5)
+    date_referenced.calendar(tab6)
+
+
+if __name__=="__main__":
+    root = Tk()
+    # sv_ttk.get_theme
+    # sv_ttk.set_theme("light")
+    global db_entry
+    read_last_opened_db()
+    window1 = window(root, "Geo tools: Offline QC toolkit v." + version, "1880x850")
     root.mainloop()
-    pass
-
-root = Tk()
-global db_entry
-read_last_opened_db()
-window1 = window(root, "Geo tools: Offline QC toolkit v." + version, "1900x850")
-

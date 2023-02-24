@@ -1,5 +1,5 @@
 import sqlite3
-from tkinter import ttk
+from tkinter import ttk, OptionMenu
 from tkinter import *
 import db_selection
 from tkinter.messagebox import askyesno
@@ -26,7 +26,7 @@ def get_unique_values(db, col, tab, master):
         temp.append(val[0])
     col_vals = sorted(temp)
     col_vals = list(dict.fromkeys(col_vals))
-    return col_vals
+    return sorted(col_vals)
 
 
 def read_datasets(db):
@@ -42,7 +42,7 @@ def read_datasets(db):
     counter4 = int(c.execute("""SELECT MAX(ID) FROM datasets""").fetchone()[0])
     conn.commit()
     conn.close()
-    return newrecords
+    return sorted(newrecords)
 
 
 def select_dataset_cmd():
@@ -56,7 +56,6 @@ def select_dataset_cmd():
     global checksum_type
     global conflict_actions
     global conflict_action
-    # checksum_type = StringVar(datasets_tree)
     datasets_id_entry.configure(state='normal')
     datasets_id_entry.delete(0, END)
     datasets_name_entry.delete(0, END)
@@ -241,21 +240,21 @@ def datasets_treeview(t4, recs):
                                'Active',
                                'Description')
     datasets_tree.column("#0", width=0, minwidth=0, stretch=NO)
-    datasets_tree.column('ID', anchor=W, width=50)
-    datasets_tree.column('Name', anchor=W, width=50, stretch=NO)
-    datasets_tree.column('Dept', anchor=W, width=50, stretch=NO)
-    datasets_tree.column('Group', anchor=W, width=50, stretch=NO)
-    datasets_tree.column('Foreign base', anchor=W, width=100, stretch=NO)
-    datasets_tree.column('Foreign dir', anchor=W, width=100, stretch=NO)
-    datasets_tree.column('Foreign file', anchor=W, width=100, stretch=NO)
-    datasets_tree.column('Project base', anchor=W, width=100, stretch=NO)
-    datasets_tree.column('Project dir', anchor=W, width=100, stretch=NO)
-    datasets_tree.column('Project file', anchor=W, width=100, stretch=NO)
-    datasets_tree.column('Checksum type', anchor=W, width=100, stretch=NO)
-    datasets_tree.column('Conflict action', anchor=W, width=100, stretch=NO)
-    datasets_tree.column('Reverse copy', anchor=W, width=80, stretch=NO)
-    datasets_tree.column('Active', anchor=W, width=50, stretch=NO)
-    datasets_tree.column('Description', anchor=W, width=100, stretch=NO)
+    datasets_tree.column('ID', anchor=W, width=70)
+    datasets_tree.column('Name', anchor=W, width=70, stretch=NO)
+    datasets_tree.column('Dept', anchor=W, width=70, stretch=NO)
+    datasets_tree.column('Group', anchor=W, width=70, stretch=NO)
+    datasets_tree.column('Foreign base', anchor=W, width=130, stretch=NO)
+    datasets_tree.column('Foreign dir', anchor=W, width=130, stretch=NO)
+    datasets_tree.column('Foreign file', anchor=W, width=130, stretch=NO)
+    datasets_tree.column('Project base', anchor=W, width=130, stretch=NO)
+    datasets_tree.column('Project dir', anchor=W, width=130, stretch=NO)
+    datasets_tree.column('Project file', anchor=W, width=130, stretch=NO)
+    datasets_tree.column('Checksum type', anchor=W, width=130, stretch=NO)
+    datasets_tree.column('Conflict action', anchor=W, width=130, stretch=NO)
+    datasets_tree.column('Reverse copy', anchor=W, width=100, stretch=NO)
+    datasets_tree.column('Active', anchor=W, width=70, stretch=NO)
+    datasets_tree.column('Description', anchor=W, width=120, stretch=NO)
     datasets_tree.heading("#0", text="UID", anchor=W)
     datasets_tree.heading("ID", text="ID", anchor=W)
     datasets_tree.heading("Name", text="Name", anchor=W)
@@ -282,41 +281,17 @@ def datasets_treeview(t4, recs):
     datasets_filter()
 
 
-def apply_filter_cmd():
-    global filterdept
-    global filtergroup
-    global selected_db
-    global counter4
-    conn = sqlite3.connect(selected_db)
-    cursor = conn.cursor()
-    if filtergroup.get() != '':
-        recs = cursor.execute(
-            """SELECT rowid, * from datasets WHERE "Dept" = :filterdept AND "Group" = :filtergroup """,
-            {'filterdept': filterdept.get(), 'filtergroup': filtergroup.get()}).fetchall()
-    else:
-        recs = cursor.execute(
-            """SELECT rowid, * from datasets WHERE "Dept" = :filterdept """,
-            {'filterdept': filterdept.get()}).fetchall()
-    # recs = recs[1:]
-    # print(filterdept.get(), filtergroup.get())
-    # print('recs', recs)
-    datasets_tree.delete(*datasets_tree.get_children())
-    for record in recs:
-        # print(record)
-        datasets_tree.insert(parent='', index='end', iid=counter4, values=record[1:])
-        counter4 += 1
-
-
 def reset_filter_cmd():
     global counter4
+    conn = sqlite3.connect(selected_db)
+    c = conn.cursor()
     datasets_tree.delete(*datasets_tree.get_children())
     records = read_datasets(selected_db)
+    counter4 = 0
     for record in records:
         # print(record)
         datasets_tree.insert(parent='', index='end', iid=counter4, values=record)
         counter4 += 1
-    conn = sqlite3.connect(selected_db)
-    c = conn.cursor()
     counter4 = int(c.execute("""SELECT MAX(ID) FROM datasets""").fetchone()[0])
     conn.close()
     datasets_filter()
@@ -327,27 +302,78 @@ def datasets_filter():
     global filterdept
     global filtergroup
     global selected_db
+    global counter4
+    conn = sqlite3.connect(selected_db)
+    c = conn.cursor()
     filtergroup = StringVar(datesets_treeview_frame)
-    filtergroups = get_unique_values(selected_db, 'Group', 'datasets', datesets_treeview_frame)
-    filterdept = StringVar()
-    filtergroup = StringVar()
+    filtergroups = sorted(get_unique_values(selected_db, 'Group', 'datasets', datesets_treeview_frame))
+    filterdept = StringVar(datesets_treeview_frame)
+    filtergroup = StringVar(datesets_treeview_frame)
     datasets_filter_label_dept = Label(datesets_treeview_frame, text='Select department:')
     datasets_filter_label_dept.grid(row=0, column=0, sticky=E)
     datasets_filter_label_group = Label(datesets_treeview_frame, text='Select group:')
     datasets_filter_label_group.grid(row=1, column=0, sticky=E)
-    datasets_filter_selection_dept = OptionMenu(datesets_treeview_frame, filterdept, *departments)
+    datasets_filter_selection_dept = OptionMenu(datesets_treeview_frame, filterdept, *departments, command=get_groups)
     datasets_filter_selection_dept.grid(row=0, column=1, sticky='ew')
-    datasets_filter_selection_group = OptionMenu(datesets_treeview_frame, filtergroup, *filtergroups)
+    datasets_filter_selection_group = OptionMenu(datesets_treeview_frame, filtergroup, *sorted(filtergroups), command=apply_filter_cmd)
     datasets_filter_selection_group.grid(row=1, column=1, sticky='ew')
-    apply_filter_button = Button(datesets_treeview_frame, text='Apply filter', command=apply_filter_cmd)
-    apply_filter_button.grid(row=2, column=1)
+    # apply_filter_button = Button(datesets_treeview_frame, text='Apply filter', command=apply_filter_cmd)
+    # apply_filter_button.grid(row=2, column=1)
     reset_filter_button = Button(datesets_treeview_frame, text='Reset filter', command=reset_filter_cmd)
     reset_filter_button.grid(row=2, column=2)
+    conn.close()
+
+
+def apply_filter_cmd(event=None):
+    global filterdept
+    global filtergroup
+    global selected_db
+    global counter4
+    conn = sqlite3.connect(selected_db)
+    cursor = conn.cursor()
+    print("Filter applied: Department", filterdept.get(), ",Datasets group: ", filtergroup.get())
+    if filtergroup.get() != '':
+        recs = cursor.execute(
+            """SELECT rowid, * from datasets WHERE "Dept" = :filterdept AND "Group" = :filtergroup """,
+            {'filterdept': filterdept.get(), 'filtergroup': filtergroup.get()}).fetchall()
+    else:
+        recs = cursor.execute(
+            """SELECT rowid, * from datasets WHERE "Dept" = :filterdept """,
+            {'filterdept': filterdept.get()}).fetchall()
+    datasets_tree.delete(*datasets_tree.get_children())
+    counter4 = 0
+    for record in recs:
+        datasets_tree.insert(parent='', index='end', iid=counter4+1, values=record[1:])
+        counter4 += 1
+
+
+def get_groups(event=None):
+    global filterdept
+    global datesets_treeview_frame
+    global filtergroup
+    # group.set('')
+    print("Loading datasets department and group from DB.")
+    group = StringVar(datesets_treeview_frame)
+    conn = sqlite3.connect(selected_db)
+    conn.row_factory = lambda cursor, row: row[0]
+    c = conn.cursor()
+    if filterdept.get() != '':
+        request = ''' SELECT "Group" from datasets WHERE "Dept" = "{}"'''
+        groups = c.execute(request.format(filterdept.get())).fetchall()
+        groups = sorted(list(dict.fromkeys(groups)))
+    else:
+        request = '''SELECT "Group" from datasets'''
+        groups = sorted(c.execute(request).fetchall())
+    if groups == []:
+        groups = ['']
+    conn.close()
+    datasets_filter_selection_group = OptionMenu(datesets_treeview_frame, filtergroup, *groups, command=apply_filter_cmd)
+    datasets_filter_selection_group.grid(row=1, column=1, sticky='ew')
 
 
 def duplicate_dataset_cmd():
     global counter4
-    select_dataset_cmd()
+    global selected_db
     global datasets_id_entry
     global datasets_name_entry
     global datasets_dept_entry
@@ -368,9 +394,12 @@ def duplicate_dataset_cmd():
     global projectbase
     global foreignbase
     global conflict_action
-    counter4 += 1
+    print('counter4 = ', counter4)
     selected_db = db_selection.read_last_opened_db()
-    selected_folder = datasets_tree.focus()
+    conn = sqlite3.connect(selected_db)
+    c = conn.cursor()
+    counter4 = int(c.execute("""SELECT MAX(ID) FROM datasets""").fetchone()[0]) + 1
+    select_dataset_cmd()
     datasets_id_entry.configure(state='normal')
     datasets_id_entry.delete(0, "end")
     datasets_id_entry.insert(0, str(counter4))
@@ -380,12 +409,9 @@ def duplicate_dataset_cmd():
     values1 = list(values)
     values1[0] = str(counter4)
     values = values1
-    counter4 += 2
+    counter4 = int(c.execute("""SELECT MAX(ID) FROM datasets""").fetchone()[0]) + 1
     # print(values)
-    conn = sqlite3.connect(selected_db)
-    c = conn.cursor()
     datasets_tree.insert(parent='', index='end', iid=counter4+1, values=values)
-    counter4 = int(c.execute("""SELECT MAX(ID) FROM datasets""").fetchone()[0]) + 2
     c.execute("""INSERT INTO datasets (ID,Name, Dept,'Group','Foreign_base','Foreign_directory','Foreign_filename','Project_base','Project_directory','Project_filename','Checksum_type','Conflict_action','Reverse_copy','Active','Description') 
     VALUES (:datasets_id, :datasets_name, :datasets_dept,:datasets_group,:datasets_f_base,:datasets_f_dir,:datasets_f_file,
     :datasets_l_base,:datasets_l_dir, :datasets_l_file, :datasets_checksum, :datasets_conflict, :datasets_revcopy, :datasets_active, :datasets_description) """,
@@ -408,6 +434,7 @@ def duplicate_dataset_cmd():
                   'datasets_description': datasets_description_entry.get()
               })
     conn.commit()
+    counter4 = int(c.execute("""SELECT MAX(ID) FROM datasets""").fetchone()[0]) + 1
     conn.close()
     datasets_id_entry.configure(state='normal')
     datasets_id_entry.delete(0, END)
@@ -426,10 +453,7 @@ def duplicate_dataset_cmd():
     reverse.set(0)
     active.set(0)
     datasets_description_entry.delete(0, END)
-    conn = sqlite3.connect(selected_db)
-    c = conn.cursor()
-    counter4 = int(c.execute("""SELECT MAX(ID) FROM datasets""").fetchone()[0])
-    conn.close()
+
 
 def delete_dataset_cmd():
     global datasets_tree
@@ -441,8 +465,9 @@ def delete_dataset_cmd():
     except:
         id = 0
         db_selected_row = int(selected_dataset)
-    answer = askyesno(title = "Confirmation", message = "Are you sure?")
+    answer = askyesno(title="Confirmation", message="Are you sure?")
     if answer:
+        print('Dataset deleted: ', selected_dataset)
         datasets_tree.delete(selected_dataset)
         conn = sqlite3.connect(selected_db)
         c = conn.cursor()
@@ -533,16 +558,16 @@ def datasets_edit(t4):
     datasets_dept_dropdown = ttk.OptionMenu(datasets_edit_frame, dept, *departments)
     datasets_group_entry = Entry(master=datasets_edit_frame, width=30)
     datasets_foreign_base_dropdown = ttk.OptionMenu(datasets_edit_frame, foreignbase, *foreignbases)
-    datasets_foreign_dir_entry = Entry(master=datasets_edit_frame,width=50)
-    datasets_foreign_file_entry = Entry(master=datasets_edit_frame, width=50)
+    datasets_foreign_dir_entry = Entry(master=datasets_edit_frame,width=100)
+    datasets_foreign_file_entry = Entry(master=datasets_edit_frame, width=100)
     datasets_project_base_dropdown = ttk.OptionMenu(datasets_edit_frame, projectbase, *foreignbases)
-    datasets_project_dir_entry = Entry(master=datasets_edit_frame, width=50)
-    datasets_project_file_entry = Entry(master=datasets_edit_frame, width=50)
+    datasets_project_dir_entry = Entry(master=datasets_edit_frame, width=100)
+    datasets_project_file_entry = Entry(master=datasets_edit_frame, width=100)
     datasets_checksum_dropdown = ttk.OptionMenu(datasets_edit_frame, checksum_type, *checksum_types)
     datasets_conflict_dropdown = ttk.OptionMenu(datasets_edit_frame, conflict_action, *conflict_actions)
     datasets_reverse_checkbutton = Checkbutton(master=datasets_edit_frame, variable=reverse)
     datasets_active_checkbutton = Checkbutton(master=datasets_edit_frame, variable=active)
-    datasets_description_entry = Entry(master=datasets_edit_frame, width=50)
+    datasets_description_entry = Entry(master=datasets_edit_frame, width=100)
 
     datasets_id_entry.grid(row=1, column=2, sticky='EW')
     datasets_name_entry.grid(row=2, column=2, sticky='EW')

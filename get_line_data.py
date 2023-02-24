@@ -5,8 +5,11 @@ import sqlite3
 import ftplib
 from ftplib import FTP
 import pysftp
-
+import sys
 import upload
+
+# import upload
+# from upload import TextRedirector
 
 global linelogs_path
 import db_selection
@@ -14,8 +17,6 @@ linelogs_path = '/Users/silver/PycharmProjects/GUI_sheet_001/orca4/px2001922/lin
 global selected_db
 selected_db = db_selection.read_last_opened_db()
 import dataset_definitions
-
-
 
 
 
@@ -101,5 +102,3 @@ def getlines_button_cmd():
     conn.commit()
     conn.close()
     upload.seq_listbox_refresh()
-
-
