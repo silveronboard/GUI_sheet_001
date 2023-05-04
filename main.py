@@ -21,7 +21,7 @@ import dataset_definitions
 selected_db = read_last_opened_db()
 
 # software version settings
-version = "0.4"
+version = "2.0"
 
 
 # create database (copy empty db structure from MASTER_db.master)
@@ -81,7 +81,7 @@ def window(root, title, geometry):
     root.title(title)  # Window title
     root.geometry(geometry)  # Window geometry
     Label(root, text="Database selection")
-    root.iconbitmap('icon.ico')  # Main window icon
+    root.iconbitmap('geo_tools.ico')  # Main window icon
     tabControl = ttk.Notebook(root)  # Tabs creation
     tab1 = ttk.Frame(tabControl)
     tabControl.add(tab1, text="Project DB")
@@ -128,7 +128,7 @@ def window(root, title, geometry):
     dataset_definitions.datasets_treeview(tab4, dataset_records)
     dataset_definitions.datasets_edit(tab4)
     upload.sequence_treeview(tab5)
-    date_referenced.calendar(tab6)
+    # date_referenced.calendar(tab6)
 
 
 if __name__=="__main__":

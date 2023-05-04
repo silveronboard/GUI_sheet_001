@@ -223,7 +223,7 @@ def copy_cmd():
         for dataset in datasets:
             print('Running upload for sequence:', seq, "Dataset:", dataset)
             request = ''' SELECT "linename" from lines WHERE "sequence" = "{}" '''
-            linename = c.execute(request.format(seq)).fetchone()[0]
+            linename = str(c.execute(request.format(seq)).fetchone()[0])
             request = ''' SELECT * from datasets WHERE "Name" = "{}" '''
             dataset_data = c.execute(request.format(dataset)).fetchone()
             localdir = dataset_data[7]
@@ -238,13 +238,12 @@ def copy_cmd():
             localdir_path = os.path.join(c.execute(request.format(localdir)).fetchone()[5], dataset_data[8], dataset_data[9])
             foreigndir_path = os.path.join(c.execute(request.format(foreigndir)).fetchone()[5],  dataset_data[5], dataset_data[6])
             request = ''' SELECT Alias from alias WHERE "Parameter" =  "Dug RTQC name {dug_rtqc}" '''
-            dug_rtqc = c.execute(request).fetchone()[0]
+            # dug_rtqc = c.execute(request).fetchone()[0]
             alias_dict = {'{seq}': str(int(seq)),
                           '{linename}': linename,
                           '{SEQ}': seq,
                           '{projnum}': projnum,
                           '{PROJNUM}': projnum.upper(),
-                          '{dug_rtqc}':dug_rtqc
                           }
             for key, value in alias_dict.items():
                 localdir_path = localdir_path.replace(key, value)
@@ -416,13 +415,12 @@ def check_cmd():
             localdir_path = os.path.join(c.execute(request.format(localdir)).fetchone()[5], dataset_data[8], dataset_data[9])
             foreigndir_path = os.path.join(c.execute(request.format(foreigndir)).fetchone()[5],  dataset_data[5], dataset_data[6])
             request = ''' SELECT Alias from alias WHERE "Parameter" =  "Dug RTQC name {dug_rtqc}" '''
-            dug_rtqc = c.execute(request).fetchone()[0]
+            # dug_rtqc = c.execute(request).fetchone()[0]
             alias_dict = {'{seq}': str(int(seq)),
                           '{linename}': linename,
                           '{SEQ}': seq,
                           '{projnum}': projnum,
                           '{PROJNUM}': projnum.upper(),
-                          '{dug_rtqc}':dug_rtqc
                           }
             for key, value in alias_dict.items():
                 localdir_path = localdir_path.replace(key, value)

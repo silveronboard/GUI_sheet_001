@@ -13,7 +13,7 @@ import upload
 
 global linelogs_path
 import db_selection
-linelogs_path = '/Users/silver/PycharmProjects/GUI_sheet_001/orca4/px2001922/linelogs/'
+linelogs_path = 'b:\\RTQC_ONLINE\\Screengrabs\\'
 global selected_db
 selected_db = db_selection.read_last_opened_db()
 import dataset_definitions
@@ -43,30 +43,26 @@ def get_lines(path):
     conn = sqlite3.connect(selected_db)
     c = conn.cursor()
     request = ''' SELECT * from directories WHERE Name="orca2" '''
-    orca2dir = c.execute(request).fetchone()
-    request = ''' SELECT * from directories WHERE Name="orca2" '''
-    orca2dir = c.execute(request).fetchone()
-    seqlength = int(
-        c.execute(''' SELECT "alias" from alias WHERE  Parameter="Number of digits in sequence number" ''').fetchone()[
-            0])
-    seqpos = int(c.execute(
-        ''' SELECT "alias" from alias WHERE  Parameter="Start position of sequence number within line name" ''').fetchone()[
-                     0]) - 1
-    ip = orca2dir[1]
-    user = orca2dir[2]
-    pwd = orca2dir[3]
-    f = ftplib.FTP(ip)
-    f.login(user=user, passwd=pwd)
-    f.cwd('/orca2data/' + selected_db.split('.')[0] + '/exports/')
-    dirs = f.nlst()
-    for dir in dirs:
-        if 'TEST' not in dir:
-            if len(dir) == (seqpos + seqlength):
-                lines.append(dir)
-                seqs.append(str((dir[(seqpos):(seqpos+seqlength)])))
+    # orca2dir = c.execute(request).fetchone()
+    subsfile = 'b:/RTQC_ONLINE/4043_substitutions.csv'
+    # seqlength = int(c.execute(''' SELECT "alias" from alias WHERE  Parameter="Number of digits in sequence number" ''').fetchone()[0])
+    # seqpos = int(c.execute(''' SELECT "alias" from alias WHERE  Parameter="Start position of sequence number within line name" ''').fetchone()[0]) - 1
+    # dirs = os.listdir(linelogs_path)
+    """for dir in dirs:
+        if 'Temp' not in dir and '4043_Dan_Halfdan_4D' not in dir:
+        #    if len(dir) == (seqpos + seqlength):
+            lines.append(dir)
+            print("dir", dir, "seqpos", seqpos, "seqlength",seqlength)
+            seqs.append(str((dir[(seqpos):(seqpos+seqlength)])))
+    """
+    subs_df = pd.read_csv(subsfile, dtype={'SEQ': str,'LINE_NO': str}, skip_blank_lines=True).dropna(axis=0)
+    print(subs_df.to_string())
+    seqs = subs_df['SEQ'].values.tolist()
+    subs_df['LINENAME'] = subs_df['SEQ'] + '_' + subs_df['LINE_NO']
+    lines = subs_df['LINENAME'].values.tolist()
     lines_df['linename'] = lines
     lines_df['sequence'] = seqs
-    lines_df.sort_values(by=['sequence'], inplace=True)
+    print(lines_df.to_string())
     return lines_df['linename']
 
 
@@ -75,11 +71,11 @@ def sequence_from_line(line):
     conn = sqlite3.connect(selected_db)
     c = conn.cursor()
     seqpos = int(c.execute(''' SELECT "alias" from alias WHERE  Parameter="Start position of sequence number within line name" ''').fetchone()[0]) - 1
-    # print(seqpos)
+    print("seqpos", seqpos)
     seqlength = int(c.execute(''' SELECT "alias" from alias WHERE  Parameter="Number of digits in sequence number" ''').fetchone()[0])
-    # print(seqlength)
+    print("seqlength", seqlength)
     seq = line[seqpos:(seqpos + seqlength)]
-    # print(seq)
+    print("seq", seq)
     conn.close()
     return [line, seq]
 
@@ -89,6 +85,7 @@ def getlines_button_cmd():
     global linelogs_path
     print("Loading sequences data from line logs directory.")
     all_lines = get_lines(linelogs_path)
+    print(all_lines)
     old_lines = get_db_column(selected_db, 'linename', 'lines')
     conn = sqlite3.connect(selected_db)
     c = conn.cursor()
@@ -97,6 +94,7 @@ def getlines_button_cmd():
             pass
         else:
             lineseq = sequence_from_line(line)
+            # lineseq = line
             query = ''' INSERT INTO "lines" ('linename', 'sequence') VALUES ('{}', '{}')'''
             c.execute(query.format(lineseq[0], lineseq[1]))
     conn.commit()
